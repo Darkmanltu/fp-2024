@@ -1,4 +1,0 @@
-{
-    "haskell.upgradeGHCup": false,
-    "haskell.manageHLS": "GHCup"
-}
