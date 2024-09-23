@@ -6,4 +6,4 @@ module Lib1
 -- to be autocompleted in your program's repl.
 completions :: [String]
 
-completions = []
+completions = ["cmd", "main"]
