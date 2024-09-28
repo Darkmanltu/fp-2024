@@ -17,14 +17,16 @@ This programs desging is the design for a shop that simulates video game shop to
 
 ### BNF
 ```
-<shop> ::= <command> | <exit>
+<shop> ::= <command> 
 <command> ::= <buy> | <sell> 
-<buy> ::=  <item_name>
-<sell> ::= <item_name>
+<buy> ::=  <item>
+<sell> ::= <item>
 <item> ::= <item_name> <item_price>
-<item_name> ::= "sword" | "shield" | "potion" | "armor" | "rune"
-<item_price> ::= <number>
+<item_name> ::= "sword " | "shield " | "potion " | "armor " | "rune "
 <number> ::= <digit> | <digit> <number>
 <digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-<bundle> ::= <item> <item> | <itme> <bundle> | <bundle> <bundle>
+<bundle> ::= <item> <item> | <item> <bundle> | <bundle> <bundle>
+<item_price> ::= <number> <currency_type> |  <number> <currency_type> <number> <currency_type> | <number> <currency_type>  <number> <currency_type>  <number> <currency_type>
+<currency_type> ::= " gold coins " | " silver coins " | " copper coins "
+
 ```
