@@ -13,6 +13,7 @@ instance Show Wheel where
 data Person = Person String String Integer
 data EmployeeId = EmployeId Integer deriving Show
 
+-- employeeValidation (Person "John" "Doe" 12)
 employeeValidation :: Person -> Either String EmployeeId
 employeeValidation (Person _ _ age) =
     if age < 14

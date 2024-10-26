@@ -26,7 +26,7 @@ sum'' l = sumTail l 0
 -- [1,1,2,2,3,3]
 dup :: [a] -> [a]
 dup [] = []
-dup (h:t) = [h, h] ++ dup t
+dup (h:t) = [h, h] ++ dup t     -- if[ 10 5 6] then >> [10, 10, 5, 5, 6 ,6 ]
 
 -- >>> dup'' []
 -- []

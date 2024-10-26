@@ -11,6 +11,8 @@
 2. `stack test`
 
 
+
+## each branch will be used for completing the asignment
  DOMAIN: *GAME LIKE SHOP*
 
 This programs desging is the design for a shop that simulates video game shop to buy or sell various items.
