@@ -36,7 +36,7 @@ data Query = Buy Item
            | ViewInventory
     deriving (Show, Eq)
 --
--- Sword 10 gold
+--  <item> :: <item-name> <price>
 data Item = Item{
     itemName :: ItemName,
     itemPrice :: ItemPrice
@@ -59,6 +59,8 @@ data ItemPrice = SinglePrice Int CurrencyType
 data CurrencyType = Gold | Silver | Copper
     deriving (Show, Eq)
 
+-- Bundle of items
+-- <bundle> :: <item> | <bundle> and <item> | <item> and <bundle> | <bundle> and <bundle>
 data Bundle 
     = AndItems Item Item                -- Represents two items combined.
     | AndItemBundle Item Bundle         -- Represents an item and a bundle.
@@ -66,7 +68,7 @@ data Bundle
     | AndBundles Bundle Bundle          -- Represents two bundles combined.
     deriving (Show, Eq)
 
--- Parses the main query command (Buy or Sell)
+-- Parses the main query command (Buy or Sell and BuyBundle)
 parseQuery :: String -> Either String Query
 parseQuery input =
   case parseWhitespaces input of
@@ -127,6 +129,7 @@ parseWhitespaces s@(h : t) = if C.isSpace h then Right (" ", t) else Right ("", 
 -- Parses an item, e.g., "Sword 10 gold coins"
 
 -- Parses an Item as ItemName followed by ItemPrice
+-- <item> :: <item-name> <price>
 parseItem :: Parser Item
 parseItem input = 
   case parseName input of
@@ -153,7 +156,6 @@ parseName input =
    Left err -> Left $ "Failed to parse item name: " ++ err
 
 
--- Parses item prices in either single or multiple currency format
 parsePrice :: Parser ItemPrice
 parsePrice input =
   case parseCurrencyAmount input of
@@ -166,11 +168,10 @@ parsePrice input =
                   Right (MultiPrice [(num1, currency1), (num2, currency2), (num3, currency3)], rest3)
             
             _ -> Right (MultiPrice [(num1, currency1), (num2, currency2)], rest2)
-        -- Case for only one currency
         _ -> Right (SinglePrice num1 currency1, rest1)
     Left err -> Left $ "Failed to parse price: " ++ err
 
--- Helper parser to parse a single currency amount, like "10 gold"
+-- Parses a currency amount
 parseCurrencyAmount :: Parser (Int, CurrencyType)
 parseCurrencyAmount input =
   case parseNumber input of
@@ -180,7 +181,7 @@ parseCurrencyAmount input =
         Left err -> Left $ "Failed to parse currency: " ++ err
     Left err -> Left $ "Failed to parse number: " ++ err
 
--- Parses a single currency (e.g., "gold")
+
 parseCurrency :: Parser CurrencyType
 parseCurrency input =
   case parseWord input of
@@ -188,6 +189,8 @@ parseCurrency input =
     Right ("silver", rest) -> Right (Silver, rest)
     Right ("copper", rest) -> Right (Copper, rest)
     _ -> Left "Expected a currency type (gold, silver, or copper)"
+
+
 
 parseBundle :: Parser Bundle
 parseBundle input = 
@@ -262,14 +265,15 @@ stateTransition st query = case query of
                     then "Inventory is empty."
                     else "Current inventory:\n" ++ unlines (map show inventoryList)
        in Right (Just message, st)
--- Removes a specific item from the inventory list
+
+
+-- fucntion to remove an item from the inventory
 removeItem :: Item -> [Item] -> [Item]
 removeItem item inventory =
   case L.elemIndex item inventory of
     Just index -> L.take index inventory ++ L.drop (index + 1) inventory
     Nothing -> inventory
 
--- Helper function to unpack items in a bundle
 unpackBundle :: Bundle -> [Item]
 unpackBundle (AndItems i1 i2) = [i1, i2]
 unpackBundle (AndItemBundle i b) = i : unpackBundle b
