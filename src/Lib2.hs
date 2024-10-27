@@ -1,6 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 module Lib2
-    ( Query(..),
+     ( Query(..),
       parseQuery,
       State(..),
       emptyState,
@@ -8,14 +8,24 @@ module Lib2
       parseChar,
       parseWhitespaces,
       parseNumber,
-      parseWord
-     
+      parseWord,
+      Item(..),
+      Bundle(..), 
+      ItemName(..),
+      ItemPrice(..),
+      CurrencyType(..),
+      parseItem,
+      parseName,
+      parsePrice,
+      parseCurrencyAmount,
+      parseCurrency,
+      parseBundle
     ) where
 
 import qualified Data.Char as C
 import qualified Data.List as L
-import Lessons.Lesson04 ()
-import Text.ParserCombinators.ReadPrec (reset)
+
+
 
 type Parser a = String -> Either String (a, String)
 
@@ -23,9 +33,14 @@ type Parser a = String -> Either String (a, String)
 data Query = Buy Item
            | Sell Item
            | BuyBundle Bundle
+           | ViewInventory
     deriving (Show, Eq)
-
-data Item = Item ItemName ItemPrice
+--
+-- Sword 10 gold
+data Item = Item{
+    itemName :: ItemName,
+    itemPrice :: ItemPrice
+} 
     deriving (Show, Eq)
 
 data ItemName = Sword 
@@ -34,6 +49,7 @@ data ItemName = Sword
               | Armor
               | Rune
     deriving (Show, Eq)
+    
 -- adjusting the ItemPrice data type to include multiple prices, and not having infinite recursion
 
 data ItemPrice = SinglePrice Int CurrencyType 
@@ -56,14 +72,19 @@ parseQuery input =
   case parseWhitespaces input of
     Right (_, rest) ->
       case parseWord rest of
+        Right ("BuyBundle", rest1) ->
+          case parseBundle rest1 of
+            Right (bundle, rest2) -> Right (BuyBundle bundle) -- Handle BuyBundle directly
+            Left err -> Left $ "Failed to parse bundle: " ++ err
         Right ("Buy", rest1) ->
           case parseItem rest1 of
-           -- Right (item, rest2) -> Right (BuyItem, item)
+            Right (item, rest2) -> Right (Buy item)
             Left err -> Left $ "Failed to parse Buy command: " ++ err
         Right ("Sell", rest1) ->
           case parseItem rest1 of
             Right (item, rest2) -> Right (Sell item)
             Left err -> Left $ "Failed to parse Sell command: " ++ err
+        Right ("ViewInventory", rest1) -> Right ViewInventory
         Right (unknownCommand, _) -> Left $ "Unknown command: " ++ unknownCommand
         Left err -> Left $ "Failed to parse command: " ++ err
     Left err -> Left $ "Failed to parse query: " ++ err
@@ -168,9 +189,32 @@ parseCurrency input =
     Right ("copper", rest) -> Right (Copper, rest)
     _ -> Left "Expected a currency type (gold, silver, or copper)"
 
+parseBundle :: Parser Bundle
+parseBundle input = 
+  case parseItem input of
+    Right (item1, rest) ->
+      case parseWord rest of
+        Right ("and", rest1) -> 
+          case parseItem rest1 of
+            Right (item2, rest2) -> Right (AndItems item1 item2, rest2)  -- Parses two items as `AndItems`
+            Left _ -> 
+              case parseBundle rest1 of
+                Right (bundle, rest2) -> Right (AndItemBundle item1 bundle, rest2)  -- Parses item and bundle as `AndItemBundle`
+                Left err -> Left $ "Failed to parse item + bundle: " ++ err
+        _ -> Left "Expected 'and' keyword after first item in bundle"
 
-
-
+    Left _ -> case parseBundle input of
+      Right (bundle1, rest) ->
+        case parseWord rest of
+          Right ("and", rest1) ->
+            case parseItem rest1 of
+              Right (item, rest2) -> Right (AndBundleItem bundle1 item, rest2)  -- Parses bundle and item as `AndBundleItem`
+              Left _ -> 
+                case parseBundle rest1 of
+                  Right (bundle2, rest2) -> Right (AndBundles bundle1 bundle2, rest2)  -- Parses two bundles as `AndBundles`
+                  Left err -> Left $ "Failed to parse bundle + bundle: " ++ err
+          _ -> Left "Expected 'and' keyword after first bundle in bundle"
+      Left err -> Left $ "Failed to parse bundle: " ++ err
 
   
 -- Reads the item name to convert it to the ItemName type
@@ -184,14 +228,50 @@ readItemName _ = error "Invalid item name"
 
 -- An entity representing program state
 data State = State {
-    inventory :: [(String, Int)],
-    money :: Int
+    inventory :: [Item],
+    gold :: Int,
+    silver :: Int,
+    copper :: Int
 } deriving (Show, Eq)
 
 -- Creates an initial program state
 emptyState :: State
-emptyState = State { inventory = [], money = 100 }
+emptyState = State { inventory = [], gold = 100, silver = 100, copper = 100 }
+
 
 -- Updates state based on a query
 stateTransition :: State -> Query -> Either String (Maybe String, State)
-stateTransition _ _ = Left "Not implemented"
+stateTransition st query = case query of  
+    Buy item -> 
+      let newState = st { inventory = item : inventory st }
+       in Right (Just $ "Bought item: " ++ show item, newState)
+      
+    Sell item -> 
+      let updatedInventory = removeItem item (inventory st)
+       in if length updatedInventory == length (inventory st) -- Item not found if lengths match
+             then Left $ "Item not found in inventory: " ++ show item
+             else Right (Just $ "Sold item: " ++ show item, st { inventory = updatedInventory })
+    
+    BuyBundle bundle -> 
+      let itemsInBundle = unpackBundle bundle
+          newState = st { inventory = itemsInBundle ++ inventory st }
+       in Right (Just $ "Bought bundle: " ++ show bundle, newState)
+    ViewInventory ->
+      let inventoryList = inventory st
+          message = if null inventoryList
+                    then "Inventory is empty."
+                    else "Current inventory:\n" ++ unlines (map show inventoryList)
+       in Right (Just message, st)
+-- Removes a specific item from the inventory list
+removeItem :: Item -> [Item] -> [Item]
+removeItem item inventory =
+  case L.elemIndex item inventory of
+    Just index -> L.take index inventory ++ L.drop (index + 1) inventory
+    Nothing -> inventory
+
+-- Helper function to unpack items in a bundle
+unpackBundle :: Bundle -> [Item]
+unpackBundle (AndItems i1 i2) = [i1, i2]
+unpackBundle (AndItemBundle i b) = i : unpackBundle b
+unpackBundle (AndBundleItem b i) = unpackBundle b ++ [i]
+unpackBundle (AndBundles b1 b2) = unpackBundle b1 ++ unpackBundle b2
