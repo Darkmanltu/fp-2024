@@ -1,3 +1,59 @@
+ ViewInventory
+BuyBundle ((Sword 5 gold 4 silver and Rune 4 copper 2 gold) and (Potion 4 copper and Armor 4 gold 2 silver))
+ViewInventory
+Sell Potion 5 copper
+ViewInventory
+ShowInventory
+BuyBundle (Potion 5 copper and ( Armor 10 silver and Shield 4 gold))
+Sell Potion 5 copper
+Sell Potion 5 Copper
+BuyBundle (Potion 5 copper and ( Armor 10 silver and Shield 4 gold))
+BuyBundle (Potion 5 copper and ( Armor 10 silver and Shield 4 gold))
+BuyBundle ( (Potion 5 copper and ( Armor 10 silver and Shield 4 gold))
+BuyBundle ( (Potion 5 copper) and ((Armor 10 silver) and (Shield 4 gold)) )
+Show
+Buy Sword 6 silver 5 gold
+Buy Sword 6 gold 5 silver
+Buy Sword 6 gold 5 silverq 
+Buy Sword 6 gold 4 gold 
+Buy Sword 6 gold 5 copper 
+Buy Sword 6 gold 4 silver 5 copper 
+Buy Sword 6 gold c 5 siver coins 
+Buy Sword 6 gold coins5 siver coins 
+<item_price> ::= <number> <currency_type> |  <number> <currency_type> <number> <currency_type> | <number> <currency_type>  <number> <currency_type>  <number> <currency_type>
+Buy Sword 6 gold coins5 siver coins 
+Buy Sword 6 gold coins 5 siver coins 
+Buy Sword 6 gold coins 5 siver coins
+Buy Sword 6 gold coins 5 copper coins
+Buy Sword 6 gold coins 5 copper
+Sell Sword 5 gold
+Sell Sword 5 gold
+Sell Sword 5 gold
+Sell Sword 5 gold
+ViewInventory
+Sell Sword 6 gold
+Sell Sword 6 gold
+Sell Sword 6 gold
+Sell Sword 6 gold
+ViewInventory
+BuyBundle ( (Sword 6 gold and Sword 5 gold) and (Shield 4 copper and Potion 4 copper))
+ViewInventory
+BuyBundle ( (Sword 6 gold and Sword 5 gold) and Shield 4 copper)
+ViewInventory
+BuyBundle ( Sword 6 gold and Sword 5 gold)
+BuyBundle
+BuyBundle ( Sword 6 gold and Sword 5 gold)
+BuyBundle ( Sword 6 gold and Sword 5 gold)
+BuyBundle (Sword 6 gold and Sword 5 gold)
+BuyBundle
+BuyBundle (Sword 6 gold and Sword 5 gold)
+BuyBundle ( Sword 6 gold and Sword 5 gold)
+BuyBundle  ( Sword 6 gold and Sword 5 gold)
+BuyBundle (Sword 6 gold and Sword 5 gold)
+BuyBundle
+Buy
+BuyBundle Sword a
+Buy Sword 4 gold 
  BuyBundle Armor 10 gold 5 silver and Rune 20 gold and  Armor 10 gold 5 silver and Rune 20 gold
  BuyBundle Armor 10 gold 5 silver and Rune 20 gold
 Sell Shield 4 silver
@@ -41,9 +97,4 @@ BuyBundle Sword 6 gold and Sword 4 gold
 Buy Sword 6 gold
 Buy
 buy
-buy
-Buy Sword 6 gold
-Buy Sword 6 gold
-Buy
-buy sword 6 gold coins
 buy

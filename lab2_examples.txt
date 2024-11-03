@@ -1,0 +1,37 @@
+-- to run the project you must run the command ("stack run fp2024-two")
+
+>>> Buy Sword 4 gold 
+Bought item: Item {itemName = Sword, itemPrice = SinglePrice 4 Gold}
+
+>>> BuyBundle (Potion 5 copper and ( Armor 10 silver and Shield 4 gold))
+Bought bundle: [Item {itemName = "Potion", itemPrice = SinglePrice 5 Copper},Item {itemName = "Armor", itemPrice = SinglePrice 10 Silver},Item {itemName = "Shield", itemPrice = SinglePrice 4 Gold}]
+
+
+>>> ViewInventory
+Current inventory:
+Item {itemName = "Potion", itemPrice = SinglePrice 5 Copper}
+Item {itemName = "Armor", itemPrice = SinglePrice 10 Silver}
+Item {itemName = "Shield", itemPrice = SinglePrice 4 Gold}
+
+
+>>> Sell Potion 5 copper
+Sold item: Item {itemName = "Potion", itemPrice = SinglePrice 5 Copper}
+
+>>> ViewInventory
+Current inventory:
+Item {itemName = "Armor", itemPrice = SinglePrice 10 Silver}
+Item {itemName = "Shield", itemPrice = SinglePrice 4 Gold}
+
+
+>>> BuyBundle ((Sword 5 gold 4 silver and Rune 4 copper 2 gold) and (Potion 4 copper and Armor 4 gold 2 silver))
+Bought bundle: [Item {itemName = "Sword", itemPrice = MultiPrice [(5,Gold),(4,Silver)]},Item {itemName = "Rune", itemPrice = MultiPrice [(4,Copper),(2,Gold)]},Item {itemName = "Potion", itemPrice = SinglePrice 4 Copper},Item {itemName = "Armor", itemPrice = MultiPrice [(4,Gold),(2,Silver)]}]
+
+
+>>> ViewInventory
+Current inventory:
+Item {itemName = "Sword", itemPrice = MultiPrice [(5,Gold),(4,Silver)]}
+Item {itemName = "Rune", itemPrice = MultiPrice [(4,Copper),(2,Gold)]}
+Item {itemName = "Potion", itemPrice = SinglePrice 4 Copper}
+Item {itemName = "Armor", itemPrice = MultiPrice [(4,Gold),(2,Silver)]}
+Item {itemName = "Armor", itemPrice = SinglePrice 10 Silver}
+Item {itemName = "Shield", itemPrice = SinglePrice 4 Gold}
