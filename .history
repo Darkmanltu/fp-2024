@@ -1,3 +1,34 @@
+Sell Sword 4
+Sell Sword 4
+Sell Sword 10 gold
+ResetToStarterKit starterKit
+BuyBundle (Sword 5 gold and (Sword 4 gold and Potion 4 silver))
+BuyBundle (((Sword 5 gold 4 silver and Rune 4 copper 2 gold) and ((Potion 1 copper and Shield 10 silver) and ((Armor 3 gold 5 copper and Sword 2 gold) and (Rune 2 silver 1 gold and Potion 5 silver)))) and ((Potion 3 copper 1 silver and Shield 2 gold) and ((Rune 5 copper 2 gold and Armor 7 silver) and (Sword 10 gold and Potion 2 copper))))
+ResetToStarterKit starterKit
+ViewInventory 
+ViewInventory
+ResetToStarterKit starterKit
+ViewInventory
+BuyBundle (((Sword 5 gold 4 silver and Rune 4 copper 2 gold) and ((Potion 1 copper and Shield 10 silver) and ((Armor 3 gold 5 copper and Sword 2 gold) and (Rune 2 silver 1 gold and Potion 5 silver)))) and ((Potion 3 copper 1 silver and Shield 2 gold) and ((Rune 5 copper 2 gold and Armor 7 silver) and (Sword 10 gold and Potion 2 copper))))
+BuyBundle (((Sword 5 gold 4 silver and Rune 4 copper 2 gold) and ((Potion 1 copper and Shield 10 silver) and ((Armor 3 gold 5 copper and Sword 2 gold) and (Rune 2 silver 1 gold and Potion 5 silver)))) and ((Potion 3 copper 1 silver and Shield 2 gold) and ((Rune 5 copper 2 gold and Armor 7 silver) and (Sword 10 gold and Potion 2 copper))))
+BuyBundle ((Sword 5 gold 4 silver and Rune 4 copper 2 gold) and (Potion 4 copper and Armor 4 gold 2 silver))
+BuyBundle (Sword 5 gold and (Sword 4 gold and Potion 4 silver))
+BuyBundle (Sword 5 gold anasd  Sword 4 gold)
+BuyBundle (Sword 5 gold and (Sword 4 gold and Potion 4 silver))
+BuyBundle (Sword 5 gold and (Sword 4 gold and Potion 4 silver))
+BuyBundle (Sword 5 gold and Sword 4 gold)
+BuyBundle (Sword 5 gold s Sword 4 gold)
+BuyBundle (Sword 5 gold s Sword 4 gold)
+BuyBundle (Sword 5 gold and Sword 4 gold)
+BuyBundle Sword 5 gold and Sword 4 gold
+ResetToStarterKit starterd
+ResetToStarterKit starterd
+ResetToStarterKit starterKit
+ResetToStarterKit d
+ResetToStarterKit
+Buy Sword 5 gold
+dasdsa
+dhsadlj
  ViewInventory
 BuyBundle ((Sword 5 gold 4 silver and Rune 4 copper 2 gold) and (Potion 4 copper and Armor 4 gold 2 silver))
 ViewInventory
@@ -67,34 +98,3 @@ Sell Sword 4 gold
 Sell Sword 4 gold
 ViewInventory
 Sell Shield 4 silver
-ViewInventory
-BuyBundle Sword 4 gold and Shield 4 silver and Potion 4 copper and Sword 4 copper
-ViewInventory
-BuyBundle Sword 4 gold and Shield 4 silver and Potion 4 copper
-Buy Sword 4 gold and Shield 4 silver and Potion 4 copper
-Buy Sword 4 gold and Shield 4 silver
-Buy dish 5 copper
-Buy Sword 6 gold
-Buy
-bu
-Buy Sword 10 gold
-Sword 10 gold
-Sell Sword 6 gold
-Sell Sword 6 gold
-Sell Sword 6 gold
-Sell Sword
-sell Sword 
-ViewInventory
-BuyBundle Sword 6 gold and Sword 4 gold 7 silver
-ViewInventory
-View
-BuyBundle Sword 6 gold and Sword 4 gold
-Buy
-Buy
-BuyBundle Sword 6 gold and Sword 4 gold
-View
-BuyBundle Sword 6 gold and Sword 4 gold
-Buy Sword 6 gold
-Buy
-buy
-buy

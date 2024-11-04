@@ -1,4 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant lambda" #-}
 module Lib2
      ( Query(..),
       parseQuery,
@@ -20,6 +22,10 @@ module Lib2
       parseCurrencyAmount,
       parseCurrency,
       parseBundle,
+      parse2Item,
+      parseItemBundle,
+      parseBundleItem,
+      parseBundleBundle
      
     ) where
 
@@ -32,7 +38,22 @@ data Query = Buy Item
            | Sell Item
            | BuyBundle Bundle
            | ViewInventory
+           | ResetToStarterKit State
     deriving (Show, Eq)
+
+
+
+starterKit :: State
+starterKit = State [Item "Sword" (SinglePrice 10 Gold), Item "Shield" (SinglePrice 5 Silver), Item "Potion" (SinglePrice 2 Copper)] 10 10 10 
+
+
+advancedkit :: State
+advancedkit = State [Item "Sword" (SinglePrice 50 Gold), Item "Shield" (SinglePrice 50 Silver), Item "Potion" (SinglePrice 50 Copper)] 50 50 50
+  
+
+proKit :: State
+proKit = State [Item "Sword" (SinglePrice 100 Gold), Item "Shield" (SinglePrice 100 Silver), Item "Potion" (SinglePrice 100 Copper), Item "Armor" (SinglePrice 20 Gold), Item "Rune" (SinglePrice 50 Gold)] 100 100 100
+
 
 data Item = Item{
     itemName :: String,
@@ -71,6 +92,13 @@ parseQuery input =
             Right (item, rest2) -> Right (Sell item)
             Left err -> Left $ "Failed to parse Sell command: " ++ err
         Right ("ViewInventory", rest1) -> Right ViewInventory
+        Right ("ResetToStarterKit", rest1) ->
+          case parseWord rest1 of
+            Right ("starterKit", rest2) -> Right (ResetToStarterKit starterKit)
+            Right ("advancedkit", rest2) -> Right (ResetToStarterKit advancedkit)
+            Right ("proKit", rest2) -> Right (ResetToStarterKit proKit)
+            Right (unknownKit, _) -> Left $ "Unknown kit: " ++ unknownKit
+            Left err -> Left $ "Failed to parse kit: " ++ err
         Right (unknownCommand, _) -> Left $ "Unknown command: " ++ unknownCommand
         Left err -> Left $ "Failed to parse command: " ++ err
     Left err -> Left $ "Failed to parse query: " ++ err
@@ -112,21 +140,16 @@ parseWhitespaces :: Parser String
 parseWhitespaces [] = Right ("", [])
 parseWhitespaces s@(h : t) = if C.isSpace h then Right (" ", t) else Right ("", s)
 
--- Parses an item, e.g., "Sword 10 gold coins"
+-- Parses an item, e.g., "Sword 10 gold"
 
 -- Parses an Item as ItemName followed by ItemPrice
 -- <item> :: <item-name> <price>
 parseItem :: Parser Item
 parseItem input = 
-  case parseName input of
-    Right (itemName, rest) -> 
-      case parseWhitespaces rest of
-        Right (_, rest1) ->
-          case parsePrice rest1 of
-            Right (itemPrice, rest2) -> Right (Item itemName itemPrice, rest2)
-            Left err -> Left $ "Failed to parse item price: " ++ err
-        Left err -> Left $ "Failed to parse whitespace after item name: " ++ err
-    Left err -> Left $ "Failed to parse item name: " ++ err
+  case and3(\itemName white itemPrice -> (itemName, white, itemPrice )) parseName parseWhitespaces parsePrice input of
+    Right ((itemName, _, itemPrice), rest) -> Right (Item itemName itemPrice, rest)
+    Left err -> Left $ "Failed to parse item: " ++ err
+
 
 -- Parses a valid item name
 -- <item_name> ::= "Sword " | "Shield " | "Potion " | "Armor " | "Rune "
@@ -143,7 +166,7 @@ parseName input =
    Left err -> Left $ "Failed to parse item name: " ++ err
 
 -- Parses an item price
--- <item_price> ::= <currency-amount> | <currency-amount> "and" <currency-amount> | <currency-amount> "and" <currency-amount> "and" <currency-amount>
+-- <item_price> ::= <currency-amount> | <currency-amount> <currency-amount> | <currency-amount> <currency-amount> <currency-amount>
 parsePrice :: Parser ItemPrice
 parsePrice input =
   case parseCurrencyAmount input of
@@ -178,35 +201,18 @@ or4 a b c d = \input ->
 
 
 
-and6' :: (a -> b -> c -> d -> e -> f -> g) -> Parser a -> Parser b -> Parser c -> Parser d -> Parser e -> Parser f -> Parser g
-and6' comb p1 p2 p3 p4 p5 p6 = \input ->
-  case p1 input of
-    Right (v1, r1) ->
-      case p2 r1 of
-        Right (v2, r2) ->
-          case p3 r2 of
-            Right (v3, r3) ->
-              case p4 r3 of
-                Right (v4, r4) ->
-                  case p5 r4 of
-                    Right (v5, r5) ->
-                      case p6 r5 of
-                        Right (v6, r6) -> Right (comb v1 v2 v3 v4 v5 v6, r6)
-                        Left e6 -> Left e6
-                    Left e5 -> Left e5
-                Left e4 -> Left e4
-            Left e3 -> Left e3
-        Left e2 -> Left e2
-    Left e1 -> Left e1
-
-and2 :: Parser a -> Parser b -> Parser (a, b)
-and2 a b = \input ->
+and3 :: (a -> b -> c -> d) -> Parser a -> Parser b -> Parser c -> Parser d
+and3 comb a b c = \input ->
     case a input of
         Right (v1, r1) ->
             case b r1 of
-                Right (v2, r2) -> Right ((v1, v2), r2)
+                Right (v2, r2) -> 
+                  case c r2 of
+                    Right (v3, r3) -> Right (comb v1 v2 v3, r3)
+                    Left e3 -> Left e3
                 Left e2 -> Left e2
         Left e1 -> Left e1
+--        
 --
 --
 and4' :: (a -> b -> c -> d -> e ) 
@@ -235,6 +241,8 @@ or2 a b = \input ->
                 Right r2 -> Right r2
                 Left e2 -> Left (e1 ++ ", " ++ e2)
 
+
+-- 
 
 -- Parses a currency amount
 -- <currency-amount> ::= <number> <currency>
@@ -268,7 +276,7 @@ parsePara input =
         (c:_)    -> Left $ "Expected '(' but got " ++ [c]
         []       -> Left "Expected '(' but got end of input"
 
--- parsing paranthesis but the other para
+-- parsing paranthesis but the other paranthesis
 parsePara2 :: Parser Char
 parsePara2 input = 
   case parseWhitespaces input of
@@ -277,6 +285,7 @@ parsePara2 input =
         (')':xs) -> Right (')', xs)
         (c:_)    -> Left $ "Expected ')' but got " ++ [c]
         []       -> Left "Expected ')' but got end of input"
+        
 
 
 --parsing bundles with 1 of 4 possible combinations
@@ -299,58 +308,35 @@ parseBundle input =
 -- <bundle> ::= "(" <item> "and" <item> ")"
 parse2Item :: Parser [Item]
 parse2Item input = 
-  case parseItem input of
-    Right (item1, rest1) ->
-      case parseWord rest1 of
-        Right ("and", rest2) ->
-          case parseItem rest2 of
-            Right (item2, rest3) -> Right ([item1, item2], rest3)
-            Left err -> Left $ "Failed to parse second item: " ++ err
-        Left err -> Left $ "Failed to parse 'and' keyword: " ++ err
-    Left err -> Left $ "Failed to parse first item: " ++ err
+  case and3 (\item1 word item2 -> (item1, word, item2)) parseItem parseWord parseItem input of
+    Right ((item1, "and", item2), rest) -> Right ([item1, item2], rest)
+    _ -> Left $ "Expected 'and' " 
+    
 
 -- Parses bundle that is made up of an item and a bundle
 -- <bundle> ::= "(" <item> "and" <bundle> ")"
 parseItemBundle :: Parser [Item]
 parseItemBundle input = 
-  case parseItem input of
-    Right (item, rest1) ->
-      case parseWord rest1 of
-        Right ("and", rest2) ->
-          case parseBundle rest2 of
-            Right (bundle, rest3) -> Right (item : bundle, rest3)
-            Left err -> Left $ "Failed to parse bundle: " ++ err
-        Left err -> Left $ "Failed to parse 'and' keyword: " ++ err
-    Left err -> Left $ "Failed to parse item: " ++ err
+  case and3 (\item1 word bundle -> (item1, word, bundle)) parseItem parseWord parseBundle input of
+    Right ((item1, "and", bundle), rest) -> Right (item1 : bundle, rest)
+    _ -> Left $ "Expected 'and' keyword"
+    
 
 -- Parses bundle thats is made of first a bundle then an item
 -- <bundle> ::= "(" <bundle> "and" <item> ")"
 parseBundleItem :: Parser [Item]
 parseBundleItem input = 
-  case parseBundle input of
-    Right (bundle, rest1) ->
-      case parseWord rest1 of
-        Right ("and", rest2) ->
-          case parseItem rest2 of
-            Right (item, rest3) -> Right (bundle ++ [item], rest3)
-            Left err -> Left $ "Failed to parse item: " ++ err
-        Left err -> Left $ "Failed to parse 'and' keyword: " ++ err
-    Left err -> Left $ "Failed to parse bundle: " ++ err
+  case and3 (\bundle word item -> (bundle, word, item)) parseBundle parseWord parseItem input of
+    Right ((bundle, "and", item), rest) -> Right (bundle ++ [item], rest)
+    _ -> Left "Expected 'and' keyword"
 
--- Parses a bundle that is made up of two bundles 
+-- Parses a bundle that is made up of two bundles
 -- <bundle> ::= "(" <bundle> "and" <bundle> ")"
 parseBundleBundle :: Parser [Item]
 parseBundleBundle input = 
-  case parseBundle input of
-    Right (bundle1, rest1) ->
-      case parseWord rest1 of
-        Right ("and", rest2) ->
-          case parseBundle rest2 of
-            Right (bundle2, rest3) -> Right (bundle1 ++ bundle2, rest3)
-            Left err -> Left $ "Failed to parse second bundle: " ++ err
-        Left err -> Left $ "Failed to parse 'and' keyword: " ++ err
-    Left err -> Left $ "Failed to parse first bundle: " ++ err
-
+  case and3 (\bundle1 word bundle2 -> (bundle1, word, bundle2)) parseBundle parseWord parseBundle input of
+    Right ((bundle1, "and", bundle2), rest) -> Right (bundle1 ++ bundle2, rest)
+    _ -> Left "Expected 'and' keyword"
 
 
 -- An entity representing program state
@@ -360,6 +346,8 @@ data State = State {
     silver :: Int,
     copper :: Int
 } deriving (Show, Eq)
+
+
 
 -- Creates an initial program state
 emptyState :: State
@@ -388,7 +376,12 @@ stateTransition st query = case query of
           message = if null inventoryList
                     then "Inventory is empty."
                     else "Current inventory:\n" ++ unlines (map show inventoryList)
-       in Right (Just message, st)
+      in Right (Just message, st)
+
+    ResetToStarterKit kit ->
+          let newState = kit
+          in Right (Just $ "Reset to starter kit: " ++ show kit, newState)
+             
 
 
 -- fucntion to remove an item from the inventory after an item was sold

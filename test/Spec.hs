@@ -37,7 +37,7 @@ unitTests = testGroup "Lib2 tests"
 
     testCase "Invalid sell command with unknown item" $
       Lib2.parseQuery "Sell UnknownItem 5 gold"
-        @?= Left "Failed to parse Sell command: Failed to parse item name: Invalid item name",
+        @?= Left "Failed to parse Sell command: Failed to parse item: Invalid item name",
 
     testCase "Simple bundle parsing with two items" $
       Lib2.parseQuery "BuyBundle (Sword 5 gold and Shield 3 silver)"

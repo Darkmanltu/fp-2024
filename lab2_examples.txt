@@ -35,3 +35,9 @@ Item {itemName = "Potion", itemPrice = SinglePrice 4 Copper}
 Item {itemName = "Armor", itemPrice = MultiPrice [(4,Gold),(2,Silver)]}
 Item {itemName = "Armor", itemPrice = SinglePrice 10 Silver}
 Item {itemName = "Shield", itemPrice = SinglePrice 4 Gold}
+
+
+---- Deep nested recursion example
+BuyBundle (((Sword 5 gold 4 silver and Rune 4 copper 2 gold) and ((Potion 1 copper and Shield 10 silver) and ((Armor 3 gold 5 copper and Sword 2 gold) and (Rune 2 silver 1 gold and Potion 5 silver)))) and ((Potion 3 copper 1 silver and Shield 2 gold) and ((Rune 5 copper 2 gold and Armor 7 silver) and (Sword 10 gold and Potion 2 copper))))
+
+Bought bundle: [Item {itemName = "Sword", itemPrice = MultiPrice [(5,Gold),(4,Silver)]},Item {itemName = "Rune", itemPrice = MultiPrice [(4,Copper),(2,Gold)]},Item {itemName = "Potion", itemPrice = SinglePrice 1 Copper},Item {itemName = "Shield", itemPrice = SinglePrice 10 Silver},Item {itemName = "Armor", itemPrice = MultiPrice [(3,Gold),(5,Copper)]},Item {itemName = "Sword", itemPrice = SinglePrice 2 Gold},Item {itemName = "Rune", itemPrice = MultiPrice [(2,Silver),(1,Gold)]},Item {itemName = "Potion", itemPrice = SinglePrice 5 Silver},Item {itemName = "Potion", itemPrice = MultiPrice [(3,Copper),(1,Silver)]},Item {itemName = "Shield", itemPrice = SinglePrice 2 Gold},Item {itemName = "Rune", itemPrice = MultiPrice [(5,Copper),(2,Gold)]},Item {itemName = "Armor", itemPrice = SinglePrice 7 Silver},Item {itemName = "Sword", itemPrice = SinglePrice 10 Gold},Item {itemName = "Potion", itemPrice = SinglePrice 2 Copper}]
