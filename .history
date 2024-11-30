@@ -1,0 +1,12 @@
+Buy
+save
+load
+BEGIN  Buy Sword 5 gold END
+Buy Sword 5 gold
+BEGIN
+:past
+END;
+BEGIN
+ViewInventory 
+Buy Sword 5 gold
+Buy Sword 
