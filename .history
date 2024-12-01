@@ -1,3 +1,7 @@
+load
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold END
+load
+ViewInventory
 ViewInventory
 load
 ViewInventory
@@ -94,7 +98,3 @@ save
 BEGIN Buy Sword 3 gold
 BEGIN Buy Sword 4 gold
 BEGIN Buy Sword 5 gold
-save
-load
-BEGIN Buy Sword 5 gold Buy Sword 4 copper
-BEGIN Buy Sword 5 gold Buy Sword 4 copper

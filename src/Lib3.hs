@@ -2,11 +2,16 @@
 module Lib3
     ( stateTransition,
     StorageOp (..),
+    Statements (..),
     storageOpLoop,
     parseCommand,
     parseStatements,
     marshallState,
-    renderStatements
+    renderStatements,
+    renderQuery,
+    parseBatch,
+    processSingleQuery
+
     ) where
 
 import Control.Concurrent (  Chan, readChan, writeChan, newChan)
