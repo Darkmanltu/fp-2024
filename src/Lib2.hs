@@ -282,9 +282,9 @@ parseCurrencyAmount input =
 parseCurrency :: Parser CurrencyType
 parseCurrency input =
   case parseWord input of
-    Right ("gold", rest) -> Right (Gold, rest)
-    Right ("silver", rest) -> Right (Silver, rest)
-    Right ("copper", rest) -> Right (Copper, rest)
+    Right ("Gold", rest) -> Right (Gold, rest)
+    Right ("Silver", rest) -> Right (Silver, rest)
+    Right ("Copper", rest) -> Right (Copper, rest)
     _ -> Left "Expected a currency type (gold, silver, or copper) coins"
 
 

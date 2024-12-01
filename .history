@@ -1,12 +1,100 @@
-Buy
+ViewInventory
+load
+ViewInventory
+save
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold END
+ViewInventory
+ViewInventory
+load
+save
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold END
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold END
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold   END
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold END
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold END
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold  END
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 gold Sell Sword 4 Gold  END
+BEGIN Buy Sword 5 Gold Buy Sword 5 Gold END
+BEGIN Buy Sword 5 Gold END
+BEGIN Buy Sword 5 Gold 
+BEGIN Buy Sword 5 Gold , Buy Sword 5 gold 
+BEGIN Buy Sword 5 Gold
+BEGIN Buy Sword 4 Gold Buy Sword 4 Gold
+BEGIN Buy Sword 5 Gold Buy Sword 4 Gold End
+BEGIN Buy Sword 5 Gold Buy Sword 4 Gold
+BEGIN Buy Sword 5 Gold
+BEGIN Buy Sword 5 Gold END
+BEGIN Buy Sword 5 Gold END
+BEGIN Buy Sword 5 Gold
+BEGIN Buy Sword 5 Gold BEGIN Buy Sword 5 Gold
+Buy Sword 5 Gold
+Buy Sword 5 Gold
+BEGIN Buy Sword 5 Gold BEGIN Buy Sword 5 Gold
+BEGIN Buy Sword 5 BEGIN Gold Buy Sword 5 gold
+BEGIN Buy Sword 5 BEGIN Gold Buy Sword
+BEGIN Buy Sword 5 Gold Buy Sword
+BEGIN Buy Sword 5 Gold
+BEGIN Buy Sword 5 Gold END
+BEGIN Buy Sword 5 Gold END
+BEGIN Buy Sword 5 Gold END
+load
+save
+Begin Sell Sword 5 Gold
+Begin Sell Sword 5 gold
+Sell Sword 5 Gold
+save
+Begin ViewInventory
+load
+save
+Save
+Begin ViewInventory
+BEGIN Sell Sword 3 Gold
+BEGIN Sell Sword 3 gold
+load
+load
+load
+\
+END
+Buy Sword 4 gold
+Buy Sword 5 gold
+BEGIN
+:paste 
+BEGIN
+Buy Sword 3 gold
+Buy Sword 4 gold
+Buy Sword 5 gold
+BEGIN
+:paste 
+load
+save
+BEGIN ViewInventory
+ViewInventory
+load
+load
+load
+load
+BEGIN Buy Sword 5 gold Buy Sword 4 gold
+BEGIN Buy Sword 5 gold Buy Sword 4 gold END
+load
+BEGIN Buy Sword 5 gold
+BEGIN ViewInventory
+load
+BEGIN ViewInventory
+ViewInventory
+save
+SAVE
+END
+BEGIN Buy Sword 5 gold
+BEGIN Buy Sword 4 gold
+BEGIN Buy Sword 4  gold
+save
+BEGIN Buy Sword 3 gold
+load
+save
+BEGIN Buy Sword 3 gold
+BEGIN Buy Sword 4 gold
+BEGIN Buy Sword 5 gold
 save
 load
-BEGIN  Buy Sword 5 gold END
-Buy Sword 5 gold
-BEGIN
-:past
-END;
-BEGIN
-ViewInventory 
-Buy Sword 5 gold
-Buy Sword 
+BEGIN Buy Sword 5 gold Buy Sword 4 copper
+BEGIN Buy Sword 5 gold Buy Sword 4 copper

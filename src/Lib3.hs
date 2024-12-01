@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+--{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module Lib3
     ( stateTransition,
     StorageOp (..),
@@ -15,6 +15,7 @@ import Control.Concurrent.STM (TVar, readTVar, atomically, writeTVar, readTVarIO
 import Control.Exception (IOException, try)
 import Data.Either(isLeft)
 import qualified Lib2
+import Data.Maybe (isNothing)
 
 data StorageOp = Save String (Chan ()) | Load (Chan String)
 -- | This function is started from main
@@ -59,50 +60,76 @@ data Command = StatementCommand Statements |
 parseCommand :: String -> Either String (Command, String)
 parseCommand input = 
     case Lib2.parseWhitespaces input of
-        Right (cmd, rest) -> 
-            if cmd == "load" then
-                Right (LoadCommand, rest)
-            else if cmd == "save" then
-                Right (SaveCommand, rest)
-            else
-                case parseStatements input of
-                    Right (stmts, rest) -> Right (StatementCommand stmts, rest)
-                    Right (stmts, rest') -> Right (StatementCommand stmts, rest')
-        Left e1 -> Left e1
+        Right (_, rest) -> 
+          case Lib2.parseWord rest of
+            Right (cmd, rest1) -> 
+                if cmd == "load" then
+                    Right (LoadCommand, rest1)
+                else if cmd == "save" then
+                    Right (SaveCommand, rest1)
+                else
+                    case parseStatements rest of
+                        Right (stmts, remaining) -> Right (StatementCommand stmts, remaining)
+                        Left err -> Left $ "Invalid statement: " ++ err               
+            Left e1 -> Left e1
+        Left e2 -> Left e2
 -- | Parses Statement.
 -- Must be used in parseCommand.
 -- Reuse Lib2 as much as you can.
 -- You can change Lib2.parseQuery signature if needed.
 parseStatements :: String -> Either String (Statements, String)
 parseStatements input = do
+  
   case Lib2.parseWhitespaces input of
     Left err -> Left err
     Right (_, rest) -> do
       case Lib2.parseWord rest of
         Left err -> Left err
-        Right (word, rest') -> do
+        Right (word, rest') ->
           if word == "BEGIN" then
-            case Lib2.parseQuery rest' of
-              Left err -> Left err
-              Right (rest'', query) -> do
-                if rest'' == "" then
-                  return (Single query, rest'')
-                else do
-                  case parseStatements rest'' of
-                    Left err -> Left err
-                    Right (Batch queries, remaining) -> return (Batch (query : queries), remaining)
+            parseBatch rest'
           else
-            case Lib2.parseQuery rest' of
+            case Lib2.parseQuery rest of
               Left err -> Left err
-              Right (rest'', query) -> return (Single query, rest'')
+              Right (remaining, query) -> Right (Single query, remaining)
+
+-- for testing purposes only
+-- parseQueries' :: String -> [Lib2.Query] -> Either String (Statements, String)
+-- parseQueries' input acc =
+  -- case Lib2.parseWord input of
+  --   Right ("END", rest) -> Right (Batch (reverse acc), rest)
+  --   Right (word, rest) -> 
+  --     case Lib2.parseQuery input of
+  --       Right (rest', query) -> parseQueries' rest' (query : acc)
+  --       Left err -> Left err
+  --       
+  --   Left err -> Left err
+
+parseBatch :: String -> Either String (Statements, String)
+parseBatch input =
+  case Lib2.parseWhitespaces input of
+    Right (_, rest) -> parseQueries rest []
+    Left err -> Left $ "Failed to parse batch: " ++ err
+  where
+    parseQueries :: String -> [Lib2.Query] -> Either String (Statements, String)
+    parseQueries input1' acc =
+      case Lib2.parseWhitespaces input1' of
+        Left err -> Left err
+        Right (_, input1) ->
+          case Lib2.parseWord input1 of
+            Right ("END", rest) -> Right (Batch (reverse acc), rest) -- Return collected queries on END
+            _ -> case Lib2.parseQuery input1 of        
+              Right (rest, query) -> parseQueries rest (query : acc) -- Collect query and continue
+              Left err -> Left $ "Failed to parse batch query: " ++ err
+            
+
 
 -- | Converts program's state into Statements
 -- (probably a batch, but might be a single query)
 marshallState :: Lib2.State -> Statements
-marshallState state =
-  let queries = [Lib2.ViewInventory]
-  in
-    Single (head queries)
+marshallState state = Batch queries
+  where
+    queries = map Lib2.Buy (Lib2.inventory state)
 
 -- | Renders Statements into a String which
 -- can be parsed back into Statements by parseStatements
@@ -111,12 +138,8 @@ marshallState state =
 -- Must have a property test
 -- for all s: parseStatements (renderStatements s) == Right(s, "")
 renderStatements :: Statements -> String
-renderStatements stmts =
-  case stmts of
-    Single query -> renderQuery query
-    Batch queries ->
-      "BEGIN " ++ concatMap renderQuery queries ++ "END " 
-
+renderStatements (Single q) = renderQuery q
+renderStatements (Batch qs) = "BEGIN \n" ++ concatMap ((++ "\n") . renderQuery) qs ++ "\nEND"
 
 
 renderQuery :: Lib2.Query -> String
@@ -126,7 +149,6 @@ renderQuery query =
     (Lib2.Sell item) -> "Sell " ++ showItemAsQuery item
     (Lib2.BuyBundle bundle) -> "AddBundle " ++ showBundleAsQuery bundle
     (Lib2.ViewInventory) -> "ViewInventory"
-    Lib2.ViewInventory -> "ViewInventory"
 
 showItemAsQuery :: Lib2.Item -> String
 showItemAsQuery (Lib2.Item name price) = name ++ " " ++ showPriceAsQuery price
@@ -156,6 +178,36 @@ printQueryResponse (Left err) = putStrLn $ "Failed: " ++ err
 printQueryResponse (Right Nothing) = putStrLn "Success: No message returned"
 printQueryResponse (Right (Just msg)) = putStrLn $ "Success: " ++ msg
 
+atomicStatements :: TVar Lib2.State -> Statements -> STM (Either String (Maybe String))
+atomicStatements s (Batch qs) = do
+  currentState <- readTVar s
+  case transitionThroughList currentState qs of
+    Left e -> return $ Left e
+    Right (msg, updatedState) -> do
+      writeTVar s updatedState
+      return $ Right msg
+atomicStatements s (Single q) = do
+  currentState <- readTVar s
+  case Lib2.stateTransition currentState q of
+    Left e -> return $ Left e
+    Right (msg, updatedState) -> do
+      writeTVar s updatedState
+      return $ Right msg
+
+transitionThroughList :: Lib2.State -> [Lib2.Query] -> Either String (Maybe String, Lib2.State)
+transitionThroughList initialState queries = go initialState queries Nothing
+  where
+    go state [] accMsg = Right (accMsg, state)
+    go state (q:qs) accMsg =
+      case Lib2.stateTransition state q of
+        Left err -> Left err
+        Right (msg, updatedState) -> 
+          let newAccMsg = case (accMsg, msg) of
+                (Nothing, m) -> m
+                (Just acc, Just m) -> Just (acc ++ "; " ++ m)
+                (acc, Nothing) -> acc
+          in go updatedState qs newAccMsg
+
 -- | Updates a state according to a command.
 -- Performs file IO via ioChan if needed.
 -- This allows your program to share the state
@@ -171,6 +223,7 @@ stateTransition :: TVar Lib2.State -> Command -> Chan StorageOp ->
 stateTransition stateVar command ioChan = do
   case command of
     StatementCommand (Batch queries) -> do
+      
       results <- atomically $ mapM (processSingleQuery stateVar) queries
       mapM_ printQueryResponse results
       if any isLeft results
@@ -179,31 +232,40 @@ stateTransition stateVar command ioChan = do
 
 
     StatementCommand (Single query) -> do
+      putStrLn "Processing single query" 
       result <- atomically $ processSingleQuery stateVar query
-      result <- atomically (processSingleQuery stateVar query)
       _ <- printQueryResponse result
       if isLeft result
         then return $ Left "Error processing single query"
         else return $ Right Nothing
 
-
     LoadCommand -> do
-      responceChan <- newChan
-      writeChan ioChan (Load responceChan)
-      loadedStateAsString <- readChan responceChan
-      case parseStatements loadedStateAsString of
-        Right (parsedState, _) ->
-          case parsedState of
-            Single Lib2.ViewInventory -> do
-              atomically $ writeTVar stateVar Lib2.emptyState
-              return $ Right Nothing
-            _ -> return $ Left "Failed to load state from the file"
-        Left _ ->
-          return $ Left "Failed to parse the loaded state"
+      -- Create a new channel for receiving the loaded data
+      chan <- newChan :: IO (Chan String)
+      
+      -- Send a Load operation request
+      writeChan ioChan (Load chan)
+      
+      -- Read the data from the channel
+      qs <- readChan chan
+      let trimmedQs = dropWhile (`elem` " \t\n") qs -- Trim whitespace
+      
+      if null trimmedQs
+        then return $ Left "No state file found or file is empty"
+        else case parseStatements trimmedQs of
+          Left e -> 
+            return $ Left $ "Failed to load state from file:\n" ++ e
+          Right (qs', _) -> do
+            -- Atomically update the state
+            result <- atomically $ atomicStatements stateVar qs'
+            case result of
+              Left err -> return $ Left $ "Failed to update state:\n" ++ err
+              Right msg -> return $ Right msg
+
 
 
     SaveCommand -> do
-      -- Getting state
+      -- Getting state  
       currentState <- readTVarIO stateVar
       let statementsAsString = renderStatements $ marshallState currentState
       -- Creating Chan () for response
@@ -212,6 +274,6 @@ stateTransition stateVar command ioChan = do
       writeChan ioChan (Save statementsAsString responceChan)
       -- Waiting for response
       _ <- readChan responceChan
-      return $ Right $ Just "State saved"
+      return $ Right $ Just "State saved" 
 
 
