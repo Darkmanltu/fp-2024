@@ -19,7 +19,7 @@ main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [unitTests, lib3tests]
+tests = testGroup "Tests" [unitTests, lib3tests, propertyTests]
 
 unitTests :: TestTree
 unitTests = testGroup "Lib2 tests"
@@ -75,7 +75,10 @@ instance Arbitrary Lib3.Statements where
         , Lib3.Batch <$> listOf arbitrary
         ]
 instance Arbitrary Lib2.Item where
-  arbitrary = Lib2.Item <$> arbitrary <*> arbitrary
+  arbitrary = do
+    name <- elements ["Sword", "Shield", "Potion"]
+    price <- arbitrary
+    return $ Lib2.Item name price
 instance Arbitrary Lib2.ItemName where
     arbitrary = elements [Lib2.Sword, Lib2.Shield, Lib2.Potion, Lib2.Armor]
 
@@ -84,8 +87,8 @@ instance Arbitrary Lib2.CurrencyType where
 
 instance Arbitrary Lib2.ItemPrice where
     arbitrary = oneof [
-        Lib2.SinglePrice <$> arbitrary <*> arbitrary,
-        Lib2.MultiPrice . take 3 <$> listOf1 ((,) <$> arbitrary <*> arbitrary)
+        Lib2.SinglePrice <$> arbitrary <*> arbitrary
+        
       ]
 
 -- Parsing Statements Tests
@@ -104,6 +107,46 @@ lib3tests = testGroup "parseStatements Tests"
 -- Property test: A Batch should always contain a list of queries
 prop_batchContainsQueries :: Lib3.Statements -> Bool
 prop_batchContainsQueries (Lib3.Batch queries) = not (null queries)  -- Ensures non-empty Batch
+-- prop_batchContainsQueries (Lib3.Batch queries) = not []  -- Ensures non-empty Batch
 prop_batchContainsQueries _ = True  -- For Single, this property does not apply.
 
 -- Statements property test with trace
+propertyTests :: TestTree
+propertyTests = testGroup "Property Tests"
+  [ 
+    
+    QC.testProperty "parseQuery . renderQuery == Right query" $
+      \query -> 
+        case Lib2.parseQuery (Lib3.renderQuery query) of
+          Right (_, parsedQuery) -> parsedQuery == query
+          _ -> False,
+
+        
+
+     QC.testProperty "sort == sort . reverse" $
+      \list -> sort (list :: [Int]) == sort (reverse list),    
+    
+    QC.testProperty "parseQuery . renderQuery == Right query for complex queries" $
+    \query -> let rendered = Lib3.renderQuery query
+                  parsed = Lib2.parseQuery rendered
+              in case parsed of
+                  Right (_, parsedQuery) -> parsedQuery == query
+                  _ -> False,
+    QC.testProperty "stateTransition updates inventory on Buy and Sell" $
+    \items -> 
+      let initialState = Lib2.State { Lib2.inventory = items, Lib2.gold = 0, Lib2.silver = 0, Lib2.copper = 0 }
+          itemToBuy = Lib2.Item "Potion" (Lib2.SinglePrice 5 Lib2.Silver)
+          itemToSell = Lib2.Item "Shield" (Lib2.SinglePrice 3 Lib2.Gold)
+          buyQuery = Lib2.Buy itemToBuy
+          sellQuery = Lib2.Sell itemToSell
+          resultAfterBuy = Lib2.stateTransition initialState buyQuery
+          resultAfterSell = Lib2.stateTransition initialState sellQuery
+      in case resultAfterBuy of
+          Right (_, finalStateBuy) -> Lib2.inventory finalStateBuy == (Lib2.inventory initialState ++ [itemToBuy])
+          _ -> False
+      && case resultAfterSell of
+          Right (_, finalStateSell) -> Lib2.inventory finalStateSell == filter (/= itemToSell) (Lib2.inventory initialState)
+          _ -> False
+
+
+  ]

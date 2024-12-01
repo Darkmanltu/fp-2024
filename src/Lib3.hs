@@ -146,7 +146,7 @@ renderStatements :: Statements -> String
 renderStatements (Single q) = renderQuery q
 renderStatements (Batch qs) = "BEGIN \n" ++ concatMap ((++ "\n") . renderQuery) qs ++ "\nEND"
 
-
+--
 renderQuery :: Lib2.Query -> String
 renderQuery query =
   case query of
@@ -155,6 +155,8 @@ renderQuery query =
     (Lib2.BuyBundle bundle) -> "AddBundle " ++ showBundleAsQuery bundle
     (Lib2.ViewInventory) -> "ViewInventory"
 
+-- let buyQuery = Lib2.Buy (Lib2.Item "Sword" (Lib2.SinglePrice 10 Lib2.Gold))
+-- putStrLn $ Lib3.renderQuery buyQuery
 showItemAsQuery :: Lib2.Item -> String
 showItemAsQuery (Lib2.Item name price) = name ++ " " ++ showPriceAsQuery price
 
