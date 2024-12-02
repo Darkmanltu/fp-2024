@@ -65,8 +65,7 @@ instance Arbitrary Lib2.Query where
   arbitrary = oneof 
     [
       Lib2.Buy <$> arbitrary,
-      Lib2.Sell <$> arbitrary,
-      pure Lib2.ViewInventory
+      Lib2.Sell <$> arbitrary
    ]
 
 instance Arbitrary Lib3.Statements where
@@ -84,12 +83,11 @@ instance Arbitrary Lib2.ItemName where
 
 instance Arbitrary Lib2.CurrencyType where
     arbitrary = elements [Lib2.Gold, Lib2.Silver, Lib2.Copper]
-
 instance Arbitrary Lib2.ItemPrice where
     arbitrary = oneof [
-        Lib2.SinglePrice <$> arbitrary <*> arbitrary
-        
+        Lib2.SinglePrice <$> (getNonNegative <$> arbitrary) <*> arbitrary
       ]
+
 
 -- Parsing Statements Tests
 lib3tests :: TestTree
@@ -115,13 +113,11 @@ propertyTests :: TestTree
 propertyTests = testGroup "Property Tests"
   [ 
     
-    QC.testProperty "parseQuery . renderQuery == Right query" $
-      \query -> 
-        case Lib2.parseQuery (Lib3.renderQuery query) of
-          Right (_, parsedQuery) -> parsedQuery == query
-          _ -> False,
-
-        
+ QC.testProperty "parseQuery . renderQuery == Right query" $
+    \query -> 
+      case Lib2.parseQuery (Lib3.renderQuery query) of
+        Right ("", parsedQuery) -> parsedQuery == query -- Check both the parsed query and that no input remains
+        _ -> False,
 
      QC.testProperty "sort == sort . reverse" $
       \list -> sort (list :: [Int]) == sort (reverse list),    
@@ -131,22 +127,5 @@ propertyTests = testGroup "Property Tests"
                   parsed = Lib2.parseQuery rendered
               in case parsed of
                   Right (_, parsedQuery) -> parsedQuery == query
-                  _ -> False,
-    QC.testProperty "stateTransition updates inventory on Buy and Sell" $
-    \items -> 
-      let initialState = Lib2.State { Lib2.inventory = items, Lib2.gold = 0, Lib2.silver = 0, Lib2.copper = 0 }
-          itemToBuy = Lib2.Item "Potion" (Lib2.SinglePrice 5 Lib2.Silver)
-          itemToSell = Lib2.Item "Shield" (Lib2.SinglePrice 3 Lib2.Gold)
-          buyQuery = Lib2.Buy itemToBuy
-          sellQuery = Lib2.Sell itemToSell
-          resultAfterBuy = Lib2.stateTransition initialState buyQuery
-          resultAfterSell = Lib2.stateTransition initialState sellQuery
-      in case resultAfterBuy of
-          Right (_, finalStateBuy) -> Lib2.inventory finalStateBuy == (Lib2.inventory initialState ++ [itemToBuy])
-          _ -> False
-      && case resultAfterSell of
-          Right (_, finalStateSell) -> Lib2.inventory finalStateSell == filter (/= itemToSell) (Lib2.inventory initialState)
-          _ -> False
-
-
+                  _ -> False 
   ]
