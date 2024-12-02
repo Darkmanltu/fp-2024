@@ -1,3 +1,10 @@
+BEGIN BuyBundle (Sword 5 Gold and Shield 5 Gold) Buy Sword 5 Gold  END
+ViewInventory
+ShowInventory
+ShowInventory
+BEGIN BuyBundle (Sword 5 Gold and Shield 5 Gold) Buy Sword 5 Gold  END
+BEGIN BuyBundle (Sword 5 Gold and Shield 5 Gold) END
+BEGIN BuyBundle (Sword 5 Gold and Shield 5 Gold)
 load
 BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold END
 load
@@ -91,10 +98,3 @@ END
 BEGIN Buy Sword 5 gold
 BEGIN Buy Sword 4 gold
 BEGIN Buy Sword 4  gold
-save
-BEGIN Buy Sword 3 gold
-load
-save
-BEGIN Buy Sword 3 gold
-BEGIN Buy Sword 4 gold
-BEGIN Buy Sword 5 gold

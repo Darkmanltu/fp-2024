@@ -32,3 +32,9 @@ Success: Current inventory:
 Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
 Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
 
+
+-- buyBundle and Buy in a single batch
+>>> BEGIN BuyBundle (Sword 5 Gold and Shield 5 Gold) Buy Sword 5 Gold  END
+Success: Bought bundle: [Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold},Item {itemName = "Shield", itemPrice = SinglePrice 5 Gold}]
+Success: Bought item: Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+Batch of queries processed successfully
