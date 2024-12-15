@@ -41,6 +41,7 @@ library
       Lib1
       Lib2
       Lib3
+      Parsers
   other-modules:
       Paths_fp2024
   autogen-modules:
@@ -73,6 +74,7 @@ executable fp2024-four-client
       base >=4.7 && <5
     , bytestring
     , fp2024
+    , free
     , lens
     , repline
     , string-conversions
@@ -91,8 +93,10 @@ executable fp2024-four-server
   build-depends:
       base >=4.7 && <5
     , fp2024
+    , mtl
     , repline
     , scotty
+    , stm
     , string-conversions
   default-language: Haskell2010
 
@@ -123,6 +127,7 @@ executable fp2024-three
   build-depends:
       base >=4.7 && <5
     , fp2024
+    , free
     , mtl
     , repline
     , stm

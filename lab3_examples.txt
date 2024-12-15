@@ -1,0 +1,40 @@
+-- below is the examples of running the program
+-- lines marked >>> are the for users inputs and the following text is the programs response
+-- separate boot of runing the program via : stack run fp2024-three:
+>>> ViewInventory
+Processing single query
+Success: Inventory is empty.
+
+>>>  BEGIN Buy Sword 5 Gold Buy Sword 5 Gold Buy Sword 4 Gold Sell Sword 4 Gold END
+Success: Bought item: Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+Success: Bought item: Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+Success: Bought item: Item {itemName = "Sword", itemPrice = SinglePrice 4 Gold}
+Success: Sold item: Item {itemName = "Sword", itemPrice = SinglePrice 4 Gold}
+Batch of queries processed successfully
+
+>>> save
+Saved successfully
+State saved
+
+
+---- Second boot of running the program, and testing load command.
+>>> ViewInventory
+Processing single query
+Success: Inventory is empty.
+
+>>> load 
+Loaded successfully
+Bought item: Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}; Bought item: Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+
+>>> ViewInventory
+Processing single query
+Success: Current inventory:
+Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+
+
+-- buyBundle and Buy in a single batch
+>>> BEGIN BuyBundle (Sword 5 Gold and Shield 5 Gold) Buy Sword 5 Gold  END
+Success: Bought bundle: [Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold},Item {itemName = "Shield", itemPrice = SinglePrice 5 Gold}]
+Success: Bought item: Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+Batch of queries processed successfully

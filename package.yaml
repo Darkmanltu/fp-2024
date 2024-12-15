@@ -44,7 +44,7 @@ library:
   - transformers
   - strict
   - deepseq
-
+  - free  
 executables:
   fp2024-one:
     main:                Main.hs
@@ -79,6 +79,7 @@ executables:
     - repline
     - mtl
     - stm
+    - free
   fp2024-four-client:
     main:                Main.hs
     source-dirs:         app4-client
@@ -90,6 +91,7 @@ executables:
     - fp2024
     - repline
     - lens
+    - free
     - wreq
     - bytestring
     - string-conversions
@@ -104,6 +106,8 @@ executables:
     - fp2024
     - repline
     - scotty
+    - stm
+    - mtl
     - string-conversions
 
 tests:
