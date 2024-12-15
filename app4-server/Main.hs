@@ -7,11 +7,11 @@ import Data.String.Conversions (cs)
 import Web.Scotty
 import Lib3 qualified
 import Lib2 qualified
-import Parsers qualified
+import Parsers (parse, parseCommands)
 import Control.Concurrent.Chan
 import Control.Concurrent.STM (TVar, newTVarIO, readTVarIO)
 import Control.Concurrent (forkIO)
-import Control.Monad.State.Strict as S (StateT, evalStateT, get)
+import Control.Monad.State.Strict as S (StateT, evalStateT, get, MonadTrans (lift))
 import Control.Exception (try, SomeException)
 
 type AppState = (TVar Lib2.State, Chan Lib3.StorageOp)
@@ -19,9 +19,10 @@ type AppState = (TVar Lib2.State, Chan Lib3.StorageOp)
 -- The cmd function
 cmd :: String -> StateT AppState IO String
 cmd str = do
-    case Lib3.parseCommand str of
-        Left e -> liftIO $ return ("PARSE ERROR: " ++ e)
-        Right (c, "") -> do
+    case parse parseCommands str of
+        (Left _,e) -> liftIO $ return ("PARSE ERROR: " ++ e)
+        
+        (Right c, "") -> do
             (st, chan) <- S.get
             tr <- liftIO $ Lib3.stateTransition st c chan
             case tr of
@@ -29,7 +30,7 @@ cmd str = do
                 Right m -> case m of
                     Just msg -> return msg
                     Nothing -> return "Command executed successfully"
-        Right (_, r) -> liftIO $ return ("PARSE ERROR: string is not fully consumed - remaining: " ++ r)
+        (Right _, r) -> liftIO $ return ("PARSE ERROR: string is not fully consumed - remaining: " ++ r)
 
 main :: IO ()
 main = do
@@ -44,6 +45,7 @@ main = do
 
             if cs b == ("GetState" :: String)
                 then do
+                    liftIO $ putStrLn "GetState calculation"
                     pureState <- liftIO $ readTVarIO state
                     text $ cs (Lib3.renderStatements $ Lib3.marshallState pureState)
                 else do

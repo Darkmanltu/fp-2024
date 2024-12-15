@@ -77,8 +77,8 @@ program = do
 httpLock :: MVar ()
 httpLock = unsafePerformIO $ newMVar ()
 
-runHttpRequest :: (MyDomain a -> IO a) -> MyDomain a -> IO a
-runHttpRequest httpMethod givenProgram = do
+executeHttpRequest :: (MyDomain a -> IO a) -> MyDomain a -> IO a
+executeHttpRequest httpMethod givenProgram = do
     _ <- takeMVar httpLock
 
     result <- httpMethod givenProgram
@@ -87,11 +87,11 @@ runHttpRequest httpMethod givenProgram = do
     return result
 
 
-runHttpOne :: MyDomain a -> IO a
-runHttpOne (Pure a) = return a
-runHttpOne (Free step) = do
+executeHttpOne :: MyDomain a -> IO a
+executeHttpOne (Pure a) = return a
+executeHttpOne (Free step) = do
     next <- runStep step
-    runHttpOne next
+    executeHttpOne next
     where
         runStep :: MyDomainAlgebra a -> IO a
         runStep (Load next) = do
@@ -129,16 +129,16 @@ runHttpOne (Free step) = do
             resp <- get "http://localhost:4000/state"
             return $ next (cs $ resp ^. responseBody)
 
-runTest :: MyDomain a -> IO a
-runTest p = do
+executeTest :: MyDomain a -> IO a
+executeTest p = do
     v <- newIORef Lib2.emptyState
-    runTest' v p
+    executeTest' v p
     where
-        runTest' :: IORef Lib2.State -> MyDomain a -> IO a
-        runTest' _ (Pure a) = return a
-        runTest' v (Free step) = do
+        executeTest' :: IORef Lib2.State -> MyDomain a -> IO a
+        executeTest' _ (Pure a) = return a
+        executeTest' v (Free step) = do
             next <- runStep v step
-            runTest' v next
+            executeTest' v next
 
         runStep :: IORef Lib2.State -> MyDomainAlgebra a -> IO a
         runStep v (Load next) = do
@@ -191,13 +191,15 @@ runCommandInMemory commandString state = do
 
 
 
-runHttpSmart :: MyDomain a -> IO a
-runHttpSmart p = do
+runHttpBetter :: MyDomain a -> IO a
+runHttpBetter p = do
     v <- newIORef Lib2.emptyState
 
     -- To load the saved state to active state in server
     let rawRequestLoad = cs "load" :: ByteString
     _ <- post "http://localhost:4000" rawRequestLoad
+
+
 
     let rawRequestGetState = cs "GetState" :: ByteString
     serverState <- post "http://localhost:4000" rawRequestGetState
@@ -205,7 +207,7 @@ runHttpSmart p = do
 
     let serverStateString = cs (serverState ^. responseBody)
 
-    result <- runHttpSmart' v serverStateString p
+    result <- runHttpBetter' v serverStateString p
 
     finalState <- readIORef v
     -- putStrLn $ "\n\nTest state after: " ++ show finalState
@@ -229,11 +231,11 @@ runHttpSmart p = do
 
     return result
     where
-        runHttpSmart' :: IORef Lib2.State -> String -> MyDomain a -> IO a
-        runHttpSmart' _ _ (Pure a) = return a
-        runHttpSmart' v serverStateString (Free step) = do
+        runHttpBetter' :: IORef Lib2.State -> String -> MyDomain a -> IO a
+        runHttpBetter' _ _ (Pure a) = return a
+        runHttpBetter' v serverStateString (Free step) = do
             next <- runStep v serverStateString step
-            runHttpSmart' v serverStateString next
+            runHttpBetter' v serverStateString next
         runStep :: IORef Lib2.State -> String -> MyDomainAlgebra a -> IO a
         runStep v serverStateString (Load next) = do
             _ <- runCommandInMemory serverStateString v
@@ -275,9 +277,12 @@ makeRequestWithLock requestData = do
 simulateRequests :: IO ()
 simulateRequests = do
     -- Multiple threads for simulating concurrent requests
-    _ <- forkIO $ makeRequestWithLock (cs "Request 1" :: ByteString)
-    _ <- forkIO $ makeRequestWithLock (cs "Request 2" :: ByteString)
-    _ <- forkIO $ makeRequestWithLock (cs "Request 3" :: ByteString)
+    _ <- forkIO $ makeRequestWithLock (cs "1st request" :: ByteString)
+    _ <- forkIO $ makeRequestWithLock (cs "2nd request" :: ByteString)
+    _ <- forkIO $ makeRequestWithLock (cs "3rd request" :: ByteString)
+    _ <- forkIO $ makeRequestWithLock (cs "4th request" :: ByteString)
+    _ <- forkIO $ makeRequestWithLock (cs "5th request" :: ByteString)
+    _ <- forkIO $ makeRequestWithLock (cs "6th request" :: ByteString)
     -- Wait for threads to finish
     threadDelay 10000000
 
@@ -285,26 +290,9 @@ simulateRequests = do
 
 main :: IO ()
 main = do
-    -- Without httpLock
-     result <- runHttpRequest runHttpOne program
-     putStrLn result
-     return ()
-
-    -- With httpLock
-   --  result <- runHttpRequest runHttpOne program
-     --putStrLn result
-     --return ()
-
-     --result <- runTest program
-     --putStrLn result
-     --return ()
-
-    -- result <- runHttpRequest runHttpSmart program
-    -- putStrLn result
-    -- return ()
-
-    -- For testing/showing httpLock functionality 
-    -- putStrLn "Test start"
-    -- simulateRequests
-    -- putStrLn "Test end"
-    -- return ()
+    --simulateRequests
+    --result <- executeHttpRequest executeHttpOne program
+    -- result <- executeTest program
+    result <- executeHttpRequest runHttpBetter program
+    putStrLn result
+    return ()

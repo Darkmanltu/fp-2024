@@ -51,13 +51,19 @@ many p = (do
 parseCommands :: Parser Lib3.Command
 parseCommands = do
     --_ <- parseWhitespaces
-    cmd <- parseWord
-    case cmd of
-        "load" -> return Lib3.LoadCommand
-        "save" -> return Lib3.SaveCommand
-        _ -> do
-            stmts <- parseStatements
-            return $ Lib3.StatementCommand stmts
+    cmd <- lift get
+    
+    case parse parseWord cmd of
+        (Right word, r1) ->
+            if word == "load" then
+                lift $ put r1 >> return Lib3.LoadCommand
+            else if word == "save" then
+                lift $ put r1 >> return Lib3.SaveCommand
+            else 
+                (case parse parseStatements cmd of
+                    (Right statements, r2) -> lift $ put r2 >> return (Lib3.StatementCommand statements)
+                    (Left e2, _) -> throwE e2)
+        (Left e1, _) -> throwE e1        
 
 -- | Parses Statement.
 -- Must be used in parseCommand.
@@ -66,13 +72,18 @@ parseCommands = do
 parseStatements :: Parser Lib3.Statements
 parseStatements = do
     _ <- parseWhitespaces
-    word <- parseWord
-    if word == "BEGIN"
-        then parseBatch
-        else do
-            query <- parseQuery
-            return $ Lib3.Single query
+    input <- lift get
+    case parse parseWordSpace input of 
+        (Right word, r1) ->
+            if word == "BEGIN" then
+                lift (put r1) >> parseBatch
+            else
+                (case parse parseQuery input of
+                    (Right query, r2) -> lift $ put r2 >> return (Lib3.Single query)
+                    (Left e2, _) -> throwE e2)
+        (Left e1, _) -> throwE e1
 
+        
 
 
 parseBatch :: Parser Lib3.Statements
@@ -82,23 +93,25 @@ parseBatch = do
     _ <- parseWordSpace >>= \word -> if word == "END" then return () else throwE "Expected END"
     return $ Lib3.Batch queries
 
-
+-- Helper function to run the parser
+runParser :: Parser a -> String -> (Either String a, String)
+runParser parser input = runState (runExceptT parser) input
 -- Parses the main query command (Buy or Sell and BuyBundle)
+
 parseQuery :: Parser Lib2.Query
 parseQuery = do
     _ <- parseWhitespaces
     cmd <- parseWord
     case cmd of
-        "BuyBundle" -> do
-            bundle <- parseBundle
-            return $ Lib2.BuyBundle bundle
         "Buy" -> do
             item <- parseItem
-            
             return $ Lib2.Buy item
         "Sell" -> do
             item <- parseItem
             return $ Lib2.Sell item
+        "BuyBundle" -> do
+            bundle <- parseBundle
+            return $ Lib2.BuyBundle bundle
         "ViewInventory" -> return Lib2.ViewInventory
         "ResetToStarterKit" -> do
             kit <- parseWord
@@ -108,6 +121,7 @@ parseQuery = do
                 "proKit" -> return $ Lib2.ResetToStarterKit Lib2.proKit
                 _ -> throwE $ "Unknown kit: " ++ kit
         _ -> throwE $ "Unknown command: " ++ cmd
+
 
 
 
@@ -188,7 +202,8 @@ parseNumber = do
 -- <item> :: <item-name> <price>
 parseItem :: Parser Lib2.Item
 parseItem = do
-    itemName <- parseName
+    _ <- parseWhitespaces
+    itemName <- parseWord
     _ <- parseWhitespaces
     itemPrice <- parsePrice
     return $ Lib2.Item itemName itemPrice
@@ -210,17 +225,10 @@ parseName = do
 -- <item_price> ::= <currency-amount> | <currency-amount> <currency-amount> | <currency-amount> <currency-amount> <currency-amount>
 parsePrice :: Parser Lib2.ItemPrice
 parsePrice = do
-    (num1, currency1) <- parseCurrencyAmount
-    rest <- lift get
-    case parse parseCurrencyAmount rest of
-        (Right (num2, currency2), rest2) | currency2 /= currency1 -> do
-            lift $ put rest2
-            case parse parseCurrencyAmount rest2 of
-                (Right (num3, currency3), rest3) | currency3 /= currency1 && currency3 /= currency2 -> do
-                    lift $ put rest3
-                    return $ Lib2.MultiPrice [(num1, currency1), (num2, currency2), (num3, currency3)]
-                _ -> return $ Lib2.MultiPrice [(num1, currency1), (num2, currency2)]
-        _ -> return $ Lib2.SinglePrice num1 currency1
+    num <- parseNumber
+    _ <- parseWhitespaces
+    currency <- parseCurrency
+    return $ Lib2.SinglePrice num currency
 
 -- Parses a currency amount
 -- <currency-amount> ::= <number> <currency>

@@ -376,7 +376,7 @@ data State = State {
 
 -- Creates an initial program state
 emptyState :: State
-emptyState = State { inventory = [], gold = 100, silver = 100, copper = 100 }
+emptyState = State { inventory = [], gold = 0, silver = 0, copper = 0 }
 
 
 -- Queery state transition function

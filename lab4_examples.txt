@@ -1,3 +1,88 @@
+-- Examples for showing client -> server comunication:
+
+-- used to do requests from the client to the server
+program :: MyDomain String
+program = do
+    --load
+    viewInventory
+    buy "Sword 5 Gold"
+    --sell "Sword 5 Gold"
+    save
+    viewInventory
+    state <- getState
+    return state
+
+
+in case of :
+main :
+    result <- executeHttpRequest executeHttpOne program
+    putStrLn result
+    return ()
+
+Client side:
+    State saved
+Current inventory:
+Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+
+Server:
+
+Request was: ViewInventory
+Processing single query
+Success: Inventory is empty.
+
+Request was: Buy Sword 5 Gold
+Processing single query
+Success: Bought item: Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+
+Request was: save
+Saved successfully
+
+Request was: ViewInventory
+Processing single query
+Success: Current inventory:
+Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}
+
+
+
+
+in case of testing of a temp file:
+
+main : 
+    result <- executeTest program
+    putStrLn result
+    return ()
+
+
+Client :
+    State {inventory = [Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}], gold = 0, silver = 0, copper = 0}
+
+
+
+In case of :
+main :
+    result <- executeHttpRequest runHttpBetter program
+    putStrLn result
+    return ()
+
+
+
+Client :
+    State {inventory = [Item {itemName = "Sword", itemPrice = SinglePrice 5 Gold}], gold = 0, silver = 0, copper = 0}
+
+
+
+
+Server :
+
+    
+Request was: load
+Loaded successfully
+
+Request was: GetState
+GetState calculation
+
+
+
 
 
 

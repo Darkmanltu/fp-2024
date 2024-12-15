@@ -246,7 +246,11 @@ stateTransition stateVar command ioChan = do
       _ <- printQueryResponse result
       if isLeft result
         then return $ Left "Error processing single query"
-        else return $ Right Nothing
+          else
+            case result of 
+              Right (Just msg) -> return $ Right (Just msg)
+              Right Nothing -> return $ Right Nothing
+              Left errMsg -> return $ Left errMsg
 
     LoadCommand -> do
       -- Create a new channel for receiving the loaded data
